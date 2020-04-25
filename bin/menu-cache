@@ -10,18 +10,6 @@ die() {
 	exit 1
 }
 
-if [ -n "$MENU" ]; then
-	menu="$MENU"
-elif [ -n "$DISPLAY" ] && installed dmenu; then 
-	menu='dmenu'
-elif [ -t 0 ] && installed slmenu; then
-	menu='slmenu'
-elif [ -t 0 ] && installed vis-open; then 
-	menu='vis-open'
-else
-	die "cannot decide on menu application; try setting MENU environment variable"
-fi
-	
 # -s for strict.
 # only displays from stdin. No arbitrary cached options displayed.
 if [ "$1" = '-s' ]; then
@@ -52,7 +40,7 @@ choices="$(mktemp)"
 {
 	tac "$cache";
 	tee "$choices";
-} | awk '!x[$0]++' |  $menu "$@" | if [ -n "$strict" ]; then
+} | awk '!x[$0]++' |  menu "$@" | if [ -n "$strict" ]; then
 	awk -v "choices_file=$choices" -v "cache_file=$cache" '
 		BEGIN { for (i = 0; getline < choices_file > 0; i++)
 				choices[$0] = i;

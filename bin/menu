@@ -1,0 +1,31 @@
+#!/bin/sh
+# decides & execs the menu program
+X_MENUS="dmenu"
+TERM_MENUS="vis-open slmenu"
+ARGS="$@"
+ARGV0="${0##*/}"
+
+die() {
+	echo "$ARGV0: $*" 1>&2
+	exit 1
+}
+
+installed() {
+	command -v "$1" > /dev/null 2>&1
+}
+
+if [ -n "$MENU" ]; then
+	exec $MENU "$@"
+elif [ -n "$DISPLAY" ]; then 
+	for menu in $X_MENUS; do 
+		installed $menu && exec "$menu" "$@"
+	done
+	die "cannot find menu for X"
+elif [ -t 0 ]; then
+	for menu in $TERM_MENUS; do 
+		installed $menu && exec "$menu" "$@"
+	done
+	die "cannot find menu for terminal"
+else
+	die "cannot decide on menu application; try setting MENU environment variable"
+fi
