@@ -1,6 +1,27 @@
 #!/bin/sh -e
+ARGV0="${0##*/}"
 
+installed() {
+	command -v "$1" > /dev/null 2>&1 || return 1
+}
 
+die() {
+	echo "$ARGV0: $*" 1>&2
+	exit 1
+}
+
+if [ -n "$MENU" ]; then
+	menu="$MENU"
+elif [ -n "$DISPLAY" ] && installed dmenu; then 
+	menu='dmenu'
+elif [ -t 0 ] && installed slmenu; then
+	menu='slmenu'
+elif [ -t 0 ] && installed vis-open; then 
+	menu='vis-open'
+else
+	die "cannot decide on menu application; try setting MENU environment variable"
+fi
+	
 # -s for strict.
 # only displays from stdin. No arbitrary cached options displayed.
 if [ "$1" = '-s' ]; then
@@ -8,31 +29,30 @@ if [ "$1" = '-s' ]; then
 	shift
 fi
 
-
 # Name is either passed in from sourcing script like
-# command | . dmenu_cache
+# command | . menu-cache
 # OR
-#  | dmenu_cache <cache_file_name>
-name="$(basename $0)"
+#  | menu-cache <cache_file_name>
+name="$ARGV0"
 case "$name" in
-	bash|dmenu_cache|sh) 
+	bash|menu-cache|sh) 
 		case "$1" in 
-			-*|"") echo 'either "| . dmenu_cache" or "dmenu_cache <name>"' 1>&2; exit 1;;
+			-*|"") die 'cannot determine name for cache file; invoke as either "... | . menu-cache" or "menu-cache <name>"';;
 			*) name="$1"; shift;;
 		esac;;
 esac
 
-cache="${XDG_CACHE_HOME:-"$HOME/.cache"}/dmenu_cache/$name"
+cache="${XDG_CACHE_HOME:-"$HOME/.cache"}/menu/$name"
 mkdir -p "$(dirname "$cache")"
 touch "$cache"
-choices=$(mktemp)
+choices="$(mktemp)"
 
-# tac the cache and pipe stdin into dmenu
+# tac the cache and pipe stdin into $menu
 # append the answer to the cache file.
 {
 	tac "$cache";
 	tee "$choices";
-} | awk '!x[$0]++' |  dmenu "$@" | if [ -n "$strict" ]; then
+} | awk '!x[$0]++' |  $menu "$@" | if [ -n "$strict" ]; then
 	awk -v "choices_file=$choices" -v "cache_file=$cache" '
 		BEGIN { for (i = 0; getline < choices_file > 0; i++)
 				choices[$0] = i;

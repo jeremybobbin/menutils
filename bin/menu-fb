@@ -4,7 +4,7 @@ browse() {
 	if [ -d "$1" ]; then
 		printf "/"
 		cd "$1"
-		path="$(ls -a | dmenu_cache "$(pwd | sed 's|/|%|g')" -i -p "$@")"
+		path="$(ls -a | menu-cache "$(pwd | sed 's|/|%|g')" -i -p "$@")"
 		[ $? -eq 0 ] || return $?
 		[ "$path" = '.' ] && return 0
 		browse "$path"
