@@ -1,7 +1,7 @@
 #!/bin/sh
 # decides & execs the menu program
 X_MENUS="dmenu"
-TERM_MENUS="vis-open slmenu"
+TERM_MENUS="vis-menu slmenu"
 ARGS="$@"
 ARGV0="${0##*/}"
 
@@ -21,7 +21,7 @@ elif [ -n "$DISPLAY" ]; then
 		installed $menu && exec "$menu" "$@"
 	done
 	die "cannot find menu for X"
-elif [ -t 0 ]; then
+elif [ -t 1 ]; then
 	for menu in $TERM_MENUS; do 
 		installed $menu && exec "$menu" "$@"
 	done
